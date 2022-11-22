@@ -39,15 +39,15 @@ class BahaAss(object):
         self._move_text_len = []
         self._move_time = 100  # 滚动弹幕默认 10s
         for i in range(1080 // self._font_size):
-            self._pos_end_time[0].append(0)
-            self._pos_end_time[1].append(0)
+            self._pos_end_time[0].append(-1)
+            self._pos_end_time[1].append(-1)
             self._move_start_time.append(-self._move_time)
             self._move_text_len.append(0)
 
     def _reset_aux_vars(self):
         for i in range(1080 // self._font_size):
-            self._pos_end_time[0][i] = 0
-            self._pos_end_time[1][i] = 0
+            self._pos_end_time[0][i] = -1
+            self._pos_end_time[1][i] = -1
             self._move_start_time[i] = -self._move_time
             self._move_text_len[i] = 0
 
