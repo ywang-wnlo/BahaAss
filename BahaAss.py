@@ -33,9 +33,11 @@ class BahaAss(object):
         self._digits_num = None
         self._title = None
         self._font_size = 50
-        self._end_time_pos = [0, 0]
-        self._y_pos = [25, 25]
+        self._pos_end_time = [[], []]
         self._diff_time = 50  # 默认 5s
+        for i in range(1080 // self._font_size):
+            self._pos_end_time[0].append(0)
+            self._pos_end_time[1].append(0)
 
     def _get_all_sn(self, base_url):
         base_response = requests.get(base_url, headers=self._headers)
@@ -78,23 +80,33 @@ class BahaAss(object):
 
         return f'{hour_str}:{minute_str}:{second_str}'
 
-    def _get_pos(self, start_time: int, position: int) -> str:
-        # TODO 优化 pos 逻辑
+    def _get_pos_str(self, start_time: int, position: int) -> str:
         # \pos(<x>, <y>)
         pos_str = '\pos(960,{})'
         index = position - 1
-        
-        if start_time < self._end_time_pos[index]:
-            self._y_pos[index] += 50
-            self._y_pos[index] %= 500
-        else:
-            self._y_pos[index] = 25
-        self._end_time_pos[index] = start_time + self._diff_time
+        y = None
+
+        min_end_time = self._pos_end_time[index][0]
+        min_i = 0
+        for i in range(len(self._pos_end_time[index])):
+            end_time = self._pos_end_time[index][i]
+            if start_time > end_time:
+                y = i * self._font_size + (self._font_size + 1) // 2
+                self._pos_end_time[index][i] = start_time + self._diff_time
+                break
+            if end_time < min_end_time:
+                min_end_time = end_time
+                min_i = i
+
+        if y is None:
+            y = min_i * self._font_size + (self._font_size + 1) // 2
+            self._pos_end_time[index][min_i] = start_time + self._diff_time
+            print(f"警告：{self._time_str(start_time)} 时上下方弹幕过密，会有重叠")
 
         if position == 1:
-            pos_str = pos_str.format(self._y_pos[index])
+            pos_str = pos_str.format(y)
         else:
-            pos_str = pos_str.format(1080 - self._y_pos[index])
+            pos_str = pos_str.format(1080 - y)
         return pos_str
 
     def _parse_danmu(self, danmu: dict, sn: str):
@@ -129,7 +141,7 @@ class BahaAss(object):
                     t1 = end_time
                     style = f'\move(1920,{y1},0,{y1}){color_str}'
                 else:
-                    pos_str = self._get_pos(start_time, position)
+                    pos_str = self._get_pos_str(start_time, position)
                     style = f'{pos_str}{color_str}'
                 fp.write('\nDialogue: 0,{},{},DefaultStyle,,0,0,0,,{{{}}}{}'.format(
                     start_time_str, end_time_str, style, text))
