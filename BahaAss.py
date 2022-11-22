@@ -207,8 +207,8 @@ class BahaAss(object):
                 fp.write('\nDialogue: 0,{},{},DefaultStyle,,0,0,0,,{{{}}}{}'.format(
                     start_time_str, end_time_str, style, text))
 
-    def run(self):
-        base_url = 'https://ani.gamer.com.tw/animeVideo.php?sn=20219'
+    def run(self, sn):
+        base_url = f'https://ani.gamer.com.tw/animeVideo.php?sn={sn}'
         self._get_all_sn(base_url)
         for sn in self._sn_list:
             self._reset_aux_vars()
@@ -220,4 +220,4 @@ class BahaAss(object):
 
 if __name__ == '__main__':
     baha_ass = BahaAss()
-    baha_ass.run()
+    baha_ass.run(input("输入 sn："))
