@@ -1,5 +1,6 @@
 import re
 import json
+import time
 
 import requests
 
@@ -134,7 +135,8 @@ class BahaAss(object):
         for sn in self._sn_list:
             danmu = self._get_danmu(sn)
             self._parse_danmu(danmu, sn)
-            break  # TODO
+            print(f'{self._title} [{self._sn_dict[sn]}] 已转换成功! 为防止被 ban，休眠中……')
+            time.sleep(15)
 
 
 if __name__ == '__main__':
