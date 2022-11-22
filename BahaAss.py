@@ -34,10 +34,21 @@ class BahaAss(object):
         self._title = None
         self._font_size = 50
         self._pos_end_time = [[], []]
+        self._move_start_time = []
+        self._move_text_len = []
         self._diff_time = 50  # 默认 5s
         for i in range(1080 // self._font_size):
             self._pos_end_time[0].append(0)
             self._pos_end_time[1].append(0)
+            self._move_start_time.append(self._diff_time * -2)
+            self._move_text_len.append(0)
+
+    def _reset_aux_vars(self):
+        for i in range(1080 // self._font_size):
+            self._pos_end_time[0][i] = 0
+            self._pos_end_time[1][i] = 0
+            self._move_start_time[i] = self._diff_time * -2
+            self._move_text_len[i] = 0
 
     def _get_all_sn(self, base_url):
         base_response = requests.get(base_url, headers=self._headers)
@@ -109,6 +120,55 @@ class BahaAss(object):
             pos_str = pos_str.format(1080 - y)
         return pos_str
 
+    def _not_overlap(self, start_time1: int, text_len1: int, start_time2: int, text_len2: int) -> bool:
+        if start_time2 > start_time1 + self._diff_time:
+            # 上一个弹幕已结束
+            return True
+        else:
+            # 弹幕长度
+            l1 = text_len1 * self._font_size
+            l2 = text_len2 * self._font_size
+            # 弹幕速度
+            v1 = (1920 + l1) / self._diff_time
+            v2 = (1920 + l2) / self._diff_time
+            # 间隔时间
+            delta_time = start_time2 - start_time1
+            # 弹幕间隔
+            delta_l = 4 * self._font_size
+            if v1 * delta_time <= l1 + delta_l:
+                # 新的出发时，保证上一个已完全出去，并由足够间隔
+                return False
+            if v2 * (self._diff_time - delta_time) >= 1920 - delta_l:
+                # 上个到达时，保证新的也于其有足够间隔
+                return False
+        return True
+
+    def _get_move_str(self, start_time: int, text_len: int) -> str:
+        # \move(<x1>, <y1>, <x2>, <y2>)
+        move_str = '\move({},{},{},{})'
+        x = text_len * self._font_size // 2
+        y = None
+
+        min_i = 0
+        min_start_time = self._move_start_time[0]
+        for i in range(len(self._move_start_time)):
+            if self._not_overlap(self._move_start_time[i], self._move_text_len[i], start_time, text_len):
+                y = i * self._font_size + (self._font_size + 1) // 2
+                self._move_start_time[i] = start_time
+                self._move_text_len[i] = text_len
+                break
+            if self._move_start_time[i] < min_start_time:
+                min_start_time = self._move_start_time[i]
+                min_i = i
+
+        if y is None:
+            y = min_i * self._font_size + (self._font_size + 1) // 2
+            self._move_start_time[min_i] = start_time
+            self._move_text_len[min_i] = text_len
+            print(f"警告：{self._time_str(start_time)} 时滚动弹幕过密，可能会有重叠")
+
+        return move_str.format(1920+x, y, 0-x, y)
+
     def _parse_danmu(self, danmu: dict, sn: str):
         title = '{}_{}'.format(self._title, str(
             self._sn_dict[sn]).zfill(self._digits_num))
@@ -132,14 +192,8 @@ class BahaAss(object):
                 color_str = '\c&H{}&'.format(color)
                 text = one_dict['text'].strip()
                 if position == 0:
-                    # \move(<x1>, <y1>, <x2>, <y2>)
-                    if start_time < t1:
-                        y1 += 50
-                        y1 = y1 % 400
-                    else:
-                        y1 = 25
-                    t1 = end_time
-                    style = f'\move(1920,{y1},0,{y1}){color_str}'
+                    move_str = self._get_move_str(start_time, len(text))
+                    style = f'{move_str}{color_str}'
                 else:
                     pos_str = self._get_pos_str(start_time, position)
                     style = f'{pos_str}{color_str}'
@@ -150,6 +204,7 @@ class BahaAss(object):
         base_url = 'https://ani.gamer.com.tw/animeVideo.php?sn=20219'
         self._get_all_sn(base_url)
         for sn in self._sn_list:
+            self._reset_aux_vars()
             danmu = self._get_danmu(sn)
             self._parse_danmu(danmu, sn)
             print(f'{self._title} [{self._sn_dict[sn]}] 已转换成功! 为防止被 ban，休眠中……')
