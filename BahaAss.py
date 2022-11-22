@@ -34,20 +34,21 @@ class BahaAss(object):
         self._title = None
         self._font_size = 50
         self._pos_end_time = [[], []]
+        self._pos_time = 50  # 上下弹幕默认 5s
         self._move_start_time = []
         self._move_text_len = []
-        self._diff_time = 50  # 默认 5s
+        self._move_time = 100  # 滚动弹幕默认 10s
         for i in range(1080 // self._font_size):
             self._pos_end_time[0].append(0)
             self._pos_end_time[1].append(0)
-            self._move_start_time.append(self._diff_time * -2)
+            self._move_start_time.append(-self._move_time)
             self._move_text_len.append(0)
 
     def _reset_aux_vars(self):
         for i in range(1080 // self._font_size):
             self._pos_end_time[0][i] = 0
             self._pos_end_time[1][i] = 0
-            self._move_start_time[i] = self._diff_time * -2
+            self._move_start_time[i] = -self._move_time
             self._move_text_len[i] = 0
 
     def _get_all_sn(self, base_url):
@@ -103,7 +104,7 @@ class BahaAss(object):
             end_time = self._pos_end_time[index][i]
             if start_time > end_time:
                 y = i * self._font_size + (self._font_size + 1) // 2
-                self._pos_end_time[index][i] = start_time + self._diff_time
+                self._pos_end_time[index][i] = start_time + self._pos_time
                 break
             if end_time < min_end_time:
                 min_end_time = end_time
@@ -111,7 +112,7 @@ class BahaAss(object):
 
         if y is None:
             y = min_i * self._font_size + (self._font_size + 1) // 2
-            self._pos_end_time[index][min_i] = start_time + self._diff_time
+            self._pos_end_time[index][min_i] = start_time + self._pos_time
             print(f"警告：{self._time_str(start_time)} 时上下方弹幕过密，会有重叠")
 
         if position == 1:
@@ -121,7 +122,7 @@ class BahaAss(object):
         return pos_str
 
     def _not_overlap(self, start_time1: int, text_len1: int, start_time2: int, text_len2: int) -> bool:
-        if start_time2 > start_time1 + self._diff_time:
+        if start_time2 > start_time1 + self._move_time:
             # 上一个弹幕已结束
             return True
         else:
@@ -129,8 +130,8 @@ class BahaAss(object):
             l1 = text_len1 * self._font_size
             l2 = text_len2 * self._font_size
             # 弹幕速度
-            v1 = (1920 + l1) / self._diff_time
-            v2 = (1920 + l2) / self._diff_time
+            v1 = (1920 + l1) / self._move_time
+            v2 = (1920 + l2) / self._move_time
             # 间隔时间
             delta_time = start_time2 - start_time1
             # 弹幕间隔
@@ -138,7 +139,7 @@ class BahaAss(object):
             if v1 * delta_time <= l1 + delta_l:
                 # 新的出发时，保证上一个已完全出去，并由足够间隔
                 return False
-            if v2 * (self._diff_time - delta_time) >= 1920 - delta_l:
+            if v2 * (self._move_time - delta_time) >= 1920 - delta_l:
                 # 上个到达时，保证新的也于其有足够间隔
                 return False
         return True
@@ -183,20 +184,25 @@ class BahaAss(object):
             fp.write(template_ass.format(title, self._font_size))
             for one_dict in danmu:
                 start_time = one_dict['time']
-                start_time_str = self._time_str(start_time)
-                end_time = start_time + self._diff_time
-                end_time_str = self._time_str(end_time)
                 position = one_dict['position']
                 color = one_dict['color'][1:]
                 # \c&H<bbggrr>&
                 color_str = '\c&H{}&'.format(color)
                 text = one_dict['text'].strip()
+
                 if position == 0:
+                    end_time = start_time + self._move_time
                     move_str = self._get_move_str(start_time, len(text))
                     style = f'{move_str}{color_str}'
                 else:
+                    end_time = start_time + self._pos_time
+                    end_time_str = self._time_str(end_time)
                     pos_str = self._get_pos_str(start_time, position)
                     style = f'{pos_str}{color_str}'
+
+                start_time_str = self._time_str(start_time)
+                end_time_str = self._time_str(end_time)
+
                 fp.write('\nDialogue: 0,{},{},DefaultStyle,,0,0,0,,{{{}}}{}'.format(
                     start_time_str, end_time_str, style, text))
 
