@@ -15,7 +15,7 @@ WrapStyle: 0
 
 [v4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: DefaultStyle,Microsoft YaHei UI,50,&H80FFFFFF,&H80FFFFFF,&H80000000,&H80000000,-1,0,0,0,100,100,0,0,1,1,0,5,0,0,0,0
+Style: DefaultStyle,Microsoft YaHei UI,{},&H80FFFFFF,&H80FFFFFF,&H80000000,&H80000000,-1,0,0,0,100,100,0,0,1,1,0,5,0,0,0,0
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text'''
@@ -32,6 +32,7 @@ class BahaAss(object):
         self._sn_dict = {}
         self._digits_num = None
         self._title = None
+        self._font_size = 50
         self._end_time_pos = [0, 0]
         self._y_pos = [25, 25]
         self._diff_time = 50  # 默认 5s
@@ -107,7 +108,7 @@ class BahaAss(object):
             # time 0.1s
             y1 = 25
             t1 = 0
-            fp.write(template_ass.format(title))
+            fp.write(template_ass.format(title, self._font_size))
             for one_dict in danmu:
                 start_time = one_dict['time']
                 start_time_str = self._time_str(start_time)
