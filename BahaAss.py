@@ -5,6 +5,8 @@ import random
 
 import requests
 
+# https://cnfczn.com/article/ass%E5%AD%97%E5%B9%95%E6%A0%BC%E5%BC%8F%E8%AF%A6%E8%A7%A3
+# http://www.perlfu.co.uk/projects/asa/ass-specs.doc
 template_ass = '''[Script Info]
 Title: {}
 Original Script: BahaAss.py
