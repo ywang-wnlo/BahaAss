@@ -102,6 +102,11 @@ class BahaAss(object):
         min_end_time = self._pos_end_time[index][0]
         min_i = 0
         for i in range(len(self._pos_end_time[index])):
+            if position == 2 and i < 0.1 * len(self._pos_end_time[index]):
+                # 底部弹幕预留 10%
+                min_end_time = self._pos_end_time[index][i + 1]
+                min_i = i + 1
+                continue
             end_time = self._pos_end_time[index][i]
             if start_time > end_time:
                 y = i * self._font_size + (self._font_size + 1) // 2
