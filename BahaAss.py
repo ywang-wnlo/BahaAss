@@ -80,7 +80,7 @@ class BahaAss(object):
             danmu_url, danmu_data, headers=self._headers)
 
         danmu_json = json.loads(danmu_response.content)
-        # with open('danmu.json', 'w') as fp:
+        # with open('danmu.json', 'w', encoding='utf8') as fp:
         #     json.dump(danmu_json, fp, ensure_ascii=False, indent='\t')
         return danmu_json
 
@@ -181,7 +181,7 @@ class BahaAss(object):
     def _parse_danmu(self, danmu: dict, sn: str):
         title = '{}_{}'.format(self._title, str(
             self._sn_dict[sn]).zfill(self._digits_num))
-        with open(f'{title}.ass', 'w') as fp:
+        with open(f'{title}.ass', 'w', encoding='utf8') as fp:
             # text 弹幕内容
             # color #RGB值
             # size 0->小 1->正常 2->大
@@ -196,7 +196,7 @@ class BahaAss(object):
                 color = one_dict['color'][1:]
                 # \c&H<bbggrr>&
                 color_str = '\c&H{}&'.format(color)
-                text = one_dict['text'].strip()
+                text = one_dict['text'].strip().replace('\n', '\\n')
 
                 if position == 0:
                     end_time = start_time + self._move_time
