@@ -204,8 +204,8 @@ class BiliAss(object):
         return move_str.format(1920+x, y, 0-x, y)
 
     def _parse_danmu(self, danmu: list, ep: str):
-        title = '{}_{}'.format(self._title, str(
-            self._ep_dict[ep]['title']).zfill(self._digits_num))
+        title = '{}_{}_{}'.format(self._title, str(
+            self._ep_dict[ep]['title']).zfill(self._digits_num), self._ep_dict[ep]['long_title'])
         with open(f'{title}.ass', 'w', encoding='utf8') as fp:
             # content 弹幕内容
             # color 十进制RGB值
