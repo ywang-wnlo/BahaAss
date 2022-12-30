@@ -219,7 +219,7 @@ class BiliAss(object):
                 position = one_dict['mode']
                 color = one_dict['color']
                 # \c&H<bbggrr>&
-                color_str = '\c&H{}&'.format(color)
+                color_str = '\c&H{}&'.format(str(hex(color)).upper()[2:])
                 text = one_dict['content']
 
                 if (position == 1) or (position == 2) or (position == 3):
