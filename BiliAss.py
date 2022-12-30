@@ -55,7 +55,17 @@ class BiliAss(object):
             self._move_start_time[i] = -self._move_time
             self._move_text_len[i] = 0
 
-    def _get_all_ep(self, ep_url):
+    def _get_all_ep(self, bv_ep):
+        if bv_ep[:2] == 'BV':
+            bv_url = f'https://www.bilibili.com/video/{bv_ep}'
+            bv_response = requests.get(bv_url, headers=self._headers)
+            ep_id = bv_response.url.split('/')[-1][2:]
+        elif bv_ep[:2] == 'ep':
+            ep_id = bv_ep[2:]
+        else:
+            print('BV/ep 号需带前缀或检查网络')
+            exit(1)
+        ep_url = f'https://api.bilibili.com/pgc/view/web/season?ep_id={ep_id}'
         base_response = requests.get(ep_url, headers=self._headers)
         bash_json = json.loads(base_response.content)
         # with open('base.json', 'w', encoding='utf8') as fp:
@@ -238,9 +248,8 @@ class BiliAss(object):
                 fp.write('\nDialogue: 0,{},{},DefaultStyle,,0,0,0,,{{{}}}{}'.format(
                     start_time_str, end_time_str, style, text))
 
-    def run(self, ep_id):
-        ep_url = f'https://api.bilibili.com/pgc/view/web/season?ep_id={ep_id}'
-        self._get_all_ep(ep_url)
+    def run(self, bv_ep):
+        self._get_all_ep(bv_ep)
         for ep in self._ep_list:
             self._reset_aux_vars()
             danmu = self._get_danmu(ep)
@@ -252,4 +261,4 @@ class BiliAss(object):
 
 if __name__ == '__main__':
     bili_ass = BiliAss()
-    bili_ass.run(input('输入 ep 号：'))
+    bili_ass.run(input('输入 BV/ep 号：'))
