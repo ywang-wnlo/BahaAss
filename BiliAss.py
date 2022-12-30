@@ -116,7 +116,7 @@ class BiliAss(object):
 
         hour_str = str(hour)
         minute_str = str(minute - 60 * hour)
-        second_str = str(second - 60 * minute) + '.' + str(time)[-3:-1]
+        second_str = str(second - 60 * minute) + '.' + str(time % 1000)[:2]
 
         return f'{hour_str}:{minute_str}:{second_str}'
 
