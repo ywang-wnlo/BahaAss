@@ -31,7 +31,6 @@ class BahaAss(object):
             'Referer': None,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
         }
-        self._sn_list = []
         self._sn_dict = {}
         self._digits_num = None
         self._title = None
@@ -54,24 +53,25 @@ class BahaAss(object):
             self._move_start_time[i] = -self._move_time
             self._move_text_len[i] = 0
 
-    def _get_all_sn(self, base_url):
+    def _get_all_sn(self, sn):
+        base_url = f'https://ani.gamer.com.tw/animeVideo.php?sn={sn}'
         base_response = requests.get(base_url, headers=self._headers)
         # with open('base.html', 'wb') as fp:
         #     fp.write(base_response.content)
         base_response.encoding = 'utf8'
 
+        h1_list = re.findall(
+            r'<h1>(.+) \[(\S+)\]</h1>', base_response.text)
+        self._title = h1_list[0][0]
+        self._sn_dict[sn] = h1_list[0][1]
+
         sn_list = re.findall(
             r'<a href=\"\?sn=(\d+)\">(\S+)</a>', base_response.text)
         _max = 0
         for sn in sn_list:
-            self._sn_list.append(sn[0])
             self._sn_dict[sn[0]] = int(sn[1])
             _max = max(_max, int(sn[1]))
         self._digits_num = len(str(_max))
-
-        h1_list = re.findall(
-            r'<h1>(\S+) \[\d+\]</h1>', base_response.text)
-        self._title = h1_list[0]
 
     def _get_danmu(self, sn) -> dict:
         danmu_url = 'https://ani.gamer.com.tw/ajax/danmuGet.php'
@@ -215,9 +215,8 @@ class BahaAss(object):
                     start_time_str, end_time_str, style, text))
 
     def run(self, sn):
-        base_url = f'https://ani.gamer.com.tw/animeVideo.php?sn={sn}'
-        self._get_all_sn(base_url)
-        for sn in self._sn_list:
+        self._get_all_sn(sn)
+        for sn in self._sn_dict:
             self._reset_aux_vars()
             danmu = self._get_danmu(sn)
             self._parse_danmu(danmu, sn)
