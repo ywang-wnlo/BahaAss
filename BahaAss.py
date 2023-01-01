@@ -35,7 +35,7 @@ class BahaAss(object):
         self._sn_dict = {}
         self._digits_num = None
         self._title = None
-        self._font_size = 50
+        self._font_size = 40
         self._pos_end_time = [[], []]
         self._pos_time = 50  # 上下弹幕默认 5s
         self._move_start_time = []
